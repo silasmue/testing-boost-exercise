@@ -1,11 +1,11 @@
 #define BOOST_TEST_DYN_LINK
-#include <boost/test/unit_test.hpp>
 #include <Eigen/Dense>
+#include <boost/test/unit_test.hpp>
 #include <fstream>
 #include <string>
 #include "matrixIO.hpp"
 
-BOOST_AUTO_TEST_SUITE(MatrixIOSuite)
+BOOST_AUTO_TEST_SUITE(MatrixIOTests)
 
 BOOST_AUTO_TEST_CASE(TestCsvRead3x3)
 {
