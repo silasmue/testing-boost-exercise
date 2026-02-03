@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  style:
+    name: Code format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Use clang-format (see hint)
+        run: |
+          files=$(find src tests -type f \( -name "*.cpp" -o -name "*.hpp" \))
+          clang-format --dry-run --Werror $files
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            g++ \
+            libeigen3-dev \
+            libboost-test-dev \
+            libyaml-cpp-dev
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Upload build directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dir
+          path: build
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install runtime deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            libeigen3-dev \
+            libboost-test-dev \
+            libyaml-cpp-dev
+
+      - name: Download build directory
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dir
+          path: build
+
+      - name: Fix executable permissions
+        run: chmod +x build/testsidemade
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
